@@ -18,6 +18,9 @@ public class PostingNode {
      */
     private int docID;
 
+    //tf
+    private int termFrequency;
+
     /**
      * Pointer yang menunjuk ke node berikutnya dalam posting list.
      */
@@ -62,5 +65,13 @@ public class PostingNode {
 
     public void setSkip(PostingNode skip) {
         this.skip = skip;
+    }
+    
+    public int getTermFrequency() {
+        return termFrequency;
+    }
+
+    public void incrementTermFrequency() {
+        this.termFrequency++;
     }
 }

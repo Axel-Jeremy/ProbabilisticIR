@@ -28,6 +28,15 @@ public class InvertedIndex {
      */
     private Map<String, List<PostingNode>> postingList;
 
+    //df
+    private Map<String, Integer> postingLength;
+
+    private Map<Integer, Integer> documentLengths;
+
+    private double avgDocLength;
+
+    private long totalTermsInCollection;
+
     /**
      * Set yang menyimpan kosa kata asli (raw vocabulary) sebelum diproses,
      */
@@ -43,7 +52,11 @@ public class InvertedIndex {
      */
     public InvertedIndex() {
         this.postingList = new HashMap<>();
+        this.postingLength = new HashMap<>();
+        this.documentLengths = new HashMap<>();
         maxDocID = 0;
+        this.totalTermsInCollection = 0;
+        this.avgDocLength = 0.0;
     }
 
     /**
@@ -114,6 +127,33 @@ public class InvertedIndex {
         return rawVocabulary;
     }
 
+    public int getDfByTerm(String text) {
+        return postingLength.getOrDefault(text, 0);
+    }
+
+    public void setDocumentLength(int docID, int length) {
+        documentLengths.put(docID, length);
+        totalTermsInCollection += length;
+    }
+
+    public void computeAverageDocumentLength() {
+        if (!documentLengths.isEmpty()) {
+            this.avgDocLength = (double) totalTermsInCollection / documentLengths.size();
+        }
+    }
+
+    public int getDocumentLength(int docID) {
+        return documentLengths.getOrDefault(docID, 0);
+    }
+
+    public double getAverageDocumentLength() {
+        return this.avgDocLength;
+    }
+    
+    public int getTotalDocuments() {
+        return documentLengths.size(); // Total dokumen N
+    }
+
     /**
      * Menambahkan dokumen (berdasarkan ID) ke dalam posting list suatu kata.
      * Jika kata belum ada di indeks, akan dibuatkan list baru. Jika sudah ada, 
@@ -127,11 +167,24 @@ public class InvertedIndex {
             List<PostingNode> newList = new LinkedList<>();
             newList.add(new PostingNode(docID));
             postingList.put(term, newList);
+            postingLength.put(term, 1);
+
         } else {
-            if (!isDocIdExist(term, docID)) {
+            // Jika docID sudah ada, tambah TF
+            if (isDocIdExist(term, docID)) {
+                for (PostingNode node : postingList.get(term)) {
+                    if (node.getDocID() == docID) {
+                        node.incrementTermFrequency();
+                        break;
+                    }
+                }
+            } 
+            else if (!isDocIdExist(term, docID)) {
+                // Jika docID belum ada, buat posting baru
                 PostingNode newNode = new PostingNode(docID);
                 postingList.get(term).getLast().setNext(newNode);
                 postingList.get(term).add(newNode);
+                postingLength.replace(term, postingLength.get(term) + 1);
             }
         }
         // Perbarui nilai maxDocID jika docID baru lebih besar
@@ -167,5 +220,26 @@ public class InvertedIndex {
             }
         }
     }
+    /**
+     * Menampilkan posting list beserta nilai term frequency.
+     *
+     * @param term term yang ingin dilihat posting list-nya.
+     */
+    public void printPostingWithTF(String term) {
+        List<PostingNode> postings = getPostingList(term);
 
+        if (postings.isEmpty()) {
+            System.out.println("Term tidak ditemukan.");
+            return;
+        }
+
+        System.out.println("Posting list untuk term: " + term);
+
+        for (PostingNode node : postings) {
+            System.out.println(
+                    "DocID: " + node.getDocID() +
+                    " | TF: " + node.getTermFrequency());
+        }
+    }
+    
 }
