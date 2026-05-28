@@ -14,7 +14,7 @@ import reader.DocumentReader;
  */
 public class Main {
     public static void main(String[] args) {
-        String folderPath = "../DataSet";
+        String folderPath = "DataSet";
 
         Scanner sc = new Scanner(System.in);
         int totalDocs = numberDocument(sc);
@@ -29,6 +29,14 @@ public class Main {
 
         // bangun inverted index
         InvertedIndex invertedIndex = buildInvertedIndex(documents, totalDocs);
+
+        
+
+        // // Contoh penggunaan term frequency
+        // System.out.println("\n=== Contoh Term Frequency ===");
+        // invertedIndex.printPostingWithTF("system");
+
+
 
         // jalankan search engine
         run(invertedIndex, sc);
@@ -96,10 +104,14 @@ public class Main {
 
             // Memproses teks secara penuh (termasuk stemming) untuk dipindahkan ke posting list
             List<String> terms = preprocessor.process(content);
+            invertedIndex.setDocumentLength(docID, terms.size());
             for (String term : terms) {
                 invertedIndex.addDocument(term, docID);
             }
         }
+
+        // Panggil setelah seluruh looping (seluruh dokumen) selesai
+        invertedIndex.computeAverageDocumentLength();
 
         // Pasang skip pointer setelah struktur indeks untuk semua dokumen selesai
         invertedIndex.assignSkipPointer();
