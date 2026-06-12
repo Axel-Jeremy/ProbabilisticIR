@@ -88,4 +88,27 @@ public class PseudoRelevanceFeedback {
 
         return finalRanking;
     }
+
+    public Map<Integer, Double> PRFWith2PM(List<String> queryTerms, int topK, TwoPoissonModel tpm) {
+        Map<Integer, Double> initialRanking = tpm.calculateRSV(queryTerms, 0, new HashMap<>());
+
+        Set<Integer> topKDocuments = initialRanking.keySet().stream()
+                .limit(topK)
+                .collect(Collectors.toSet());
+
+        int R = topKDocuments.size();
+        Map<String, Integer> rtMap = new HashMap<>();
+        for (String term : queryTerms) {
+            int rt = 0;
+            for (PostingNode node : invertedIndex.getPostingList(term)) {
+                int docID = node.getDocID();
+                if (topKDocuments.contains(docID)) rt++;
+            }
+            rtMap.put(term, rt);
+        }
+
+        Map<Integer, Double> finalRanking = tpm.calculateRSV(queryTerms, R, rtMap);
+
+        return finalRanking;
+    }
 }
