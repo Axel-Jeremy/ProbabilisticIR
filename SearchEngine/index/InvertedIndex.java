@@ -138,7 +138,7 @@ public class InvertedIndex {
 
     public void computeAverageDocumentLength() {
         if (!documentLengths.isEmpty()) {
-            this.avgDocLength = (double) totalTermsInCollection / documentLengths.size();
+            this.avgDocLength = (double) totalTermsInCollection / getTotalDocuments();
         }
     }
 
