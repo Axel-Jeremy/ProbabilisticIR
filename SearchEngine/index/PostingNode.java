@@ -39,6 +39,7 @@ public class PostingNode {
      */
     public PostingNode(int docID) {
         this.docID = docID;
+        this.termFrequency = 1;
         this.next = null;
         this.skip = null;
     }

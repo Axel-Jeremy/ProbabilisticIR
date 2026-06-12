@@ -3,7 +3,7 @@ import java.util.*;
 import index.*;
 import model.*;
 import preprocess.TextPreprocessor;
-import query.Query;
+
 import reader.DocumentReader;
 
 /**
@@ -14,7 +14,7 @@ import reader.DocumentReader;
  */
 public class Main {
     public static void main(String[] args) {
-        String folderPath = "DataSet";
+        String folderPath = "../DataSet";
 
         Scanner sc = new Scanner(System.in);
         int totalDocs = numberDocument(sc);
@@ -30,13 +30,9 @@ public class Main {
         // bangun inverted index
         InvertedIndex invertedIndex = buildInvertedIndex(documents, totalDocs);
 
-        
-
         // // Contoh penggunaan term frequency
         // System.out.println("\n=== Contoh Term Frequency ===");
         // invertedIndex.printPostingWithTF("system");
-
-
 
         // jalankan search engine
         run(invertedIndex, sc);
@@ -48,7 +44,8 @@ public class Main {
      * 
      * @param sc Objek Scanner yang digunakan untuk membaca input dari console.
      * 
-     * @return Nilai integer yang merepresentasikan total dokumen yang akan diproses.
+     * @return Nilai integer yang merepresentasikan total dokumen yang akan
+     *         diproses.
      */
     private static int numberDocument(Scanner sc) {
         System.out.print("Enter total documents indexed in dataset (max 1400): ");
@@ -102,7 +99,8 @@ public class Main {
                 invertedIndex.addRawTerm(raw);
             }
 
-            // Memproses teks secara penuh (termasuk stemming) untuk dipindahkan ke posting list
+            // Memproses teks secara penuh (termasuk stemming) untuk dipindahkan ke posting
+            // list
             List<String> terms = preprocessor.process(content);
             invertedIndex.setDocumentLength(docID, terms.size());
             for (String term : terms) {
@@ -125,17 +123,34 @@ public class Main {
      * dan menjalankan perulangan (loop) untuk terus menerima kueri dari pengguna.
      * 
      * @param invertedIndex Objek InvertedIndex yang digunakan sebagai rujukan
-     * pencarian.
+     *                      pencarian.
      */
     private static void run(InvertedIndex invertedIndex, Scanner sc) {
-        // Menginisialisasi Boolean Model untuk evaluasi logical operator
-        BooleanModel model = new BooleanModel();
-        model.setInvertedIndex(invertedIndex);
-        model.setMaxDocID(invertedIndex.getMaxDocID());
+        // // Menginisialisasi Boolean Model untuk evaluasi logical operator
+        // BooleanModel model = new BooleanModel();
+        // model.setInvertedIndex(invertedIndex);
+        // model.setMaxDocID(invertedIndex.getMaxDocID());
 
-        // Menginisialisasi Tolerant Retrieval untuk fitur koreksi ejaan (typo)
-        TolerantModel tolerant = new TolerantModel();
-        tolerant.setInvertedIndex(invertedIndex);
+        // // Menginisialisasi Tolerant Retrieval untuk fitur koreksi ejaan (typo)
+        // TolerantModel tolerant = new TolerantModel();
+        // tolerant.setInvertedIndex(invertedIndex);
+
+        BIM bim = new BIM();
+        bim.setInvertedIndex(invertedIndex);
+
+        BM11 bm11 = new BM11(1.5);
+        bm11.setInvertedIndex(invertedIndex);
+
+        BM25 bm25 = new BM25(1.5, 0.75);
+        bm25.setInvertedIndex(invertedIndex);
+
+        TwoPoissonModel twoPoisson = new TwoPoissonModel(1.5);
+        twoPoisson.setInvertedIndex(invertedIndex);
+
+        PseudoRelevanceFeedback prf = new PseudoRelevanceFeedback();
+        prf.setInvertedIndex(invertedIndex);
+
+        TextPreprocessor preprocessor = new TextPreprocessor();
 
         System.out.println("---------------------------------------------");
         System.out.println("         Boolean Tolerant Retrieval          ");
@@ -152,14 +167,26 @@ public class Main {
                 continue;
             }
 
-            Query query = new Query(input);
-            query.setInvertedIndex(invertedIndex);
-            query.setTolerantModel(tolerant);
+            // Query query = new Query(input);
+            // query.setInvertedIndex(invertedIndex);
+            // query.setTolerantModel(tolerant);
             // query.setModel(model);
 
-            List<PostingNode> result = query.process();
+            // List<PostingNode> result = query.process();
 
-            printResult(result);
+            List<String> queryTerms = preprocessor.process(input);
+
+            System.out.println("\n--- BIM ---");
+            printResult(prf.PRFWithBIM(queryTerms, 10, bim));
+
+            System.out.println("\n--- Two Poisson ---");
+            printResult(prf.PRFWith2PM(queryTerms, 10, twoPoisson));
+
+            System.out.println("\n--- BM11 ---");
+            printResult(prf.PRFWithBM11(queryTerms, 10, bm11));
+
+            System.out.println("\n--- BM25 ---");
+            printResult(prf.PRFWithBM25(queryTerms, 10, bm25));
         }
     }
 
@@ -170,15 +197,17 @@ public class Main {
      * * @param result List dari PostingNode yang merepresentasikan ID dokumen hasil
      * evaluasi kueri.
      */
-    private static void printResult(List<PostingNode> result) {
+    private static void printResult(Map<Integer, Double> result) {
         if (result == null || result.isEmpty()) {
             System.out.println("--> There is no relevant document.");
-        } else {
-            System.out.print("--> List of relevant document(s): ");
-            for (PostingNode node : result) {
-                System.out.print(node.getDocID() + " ");
-            }
-            System.out.println();
+            return;
+        }
+        int rank = 1;
+        for (Map.Entry<Integer, Double> entry : result.entrySet()) {
+            System.out.printf("Rank %d | DocID: %d | Score: %.4f%n",
+                    rank++, entry.getKey(), entry.getValue());
+            if (rank > 10)
+                break;
         }
     }
 }
