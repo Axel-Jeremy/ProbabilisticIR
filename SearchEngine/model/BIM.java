@@ -3,6 +3,7 @@ package model;
 import java.util.*;
 import index.InvertedIndex;
 import index.PostingNode;
+import sorter.Sorter;
 
 /**
  * Kelas BIM merepresentasikan implementasi dari Binary Independence Model.
@@ -12,14 +13,24 @@ import index.PostingNode;
  * 
  * Sumber: Membuat sendiri dengan bantuan LLM
  * 
- * @author Keane 
+ * @author Keane, Axel
  */
 public class BIM {
     
+    //constructor
+    public BIM(){
+        this.sorter = new Sorter();
+    }
+
     /**
      * Referensi ke struktur data InvertedIndex
      */
     private InvertedIndex invertedIndex;
+
+    /**
+     * Referensi ke Sorter untuk melakukan pengurutan skor
+     */
+    private Sorter sorter;
 
     /**
      * Menetapkan objek InvertedIndex yang akan dievaluasi oleh model BIM ini.
@@ -89,14 +100,6 @@ public class BIM {
      * @return Map baru yang sudah terurut dari nilai skor tertinggi hingga terendah.
      */
     public Map<Integer, Double> sortDescending(Map<Integer, Double> score) {
-        List<Map.Entry<Integer, Double>> entries = new ArrayList<>(score.entrySet());
-        // Mengurutkan secara descending membandingkan value dari b dengan a
-        entries.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
-
-        Map<Integer, Double> hasil = new LinkedHashMap<>();
-        for (Map.Entry<Integer, Double> e : entries) {
-            hasil.put(e.getKey(), e.getValue());
-        }
-        return hasil;
+        return sorter.sortDescending(score);
     }
 }

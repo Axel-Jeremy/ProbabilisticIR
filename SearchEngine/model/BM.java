@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import sorter.Sorter;
 import index.*;
 
 /**
@@ -51,6 +52,11 @@ public class BM {
     private InvertedIndex invertedIndex;
 
     /**
+     * Referensi ke Sorter untuk melakukan pengurutan skor
+     */
+    private Sorter sorter;
+
+    /**
      * Konstruktor untuk menginisialisasi model pemeringkatan BM.
      *
      * @param k Nilai parameter $k$ untuk mengatur saturasi Term Frequency.
@@ -60,6 +66,7 @@ public class BM {
         this.bim = new BIM();
         this.k = k;
         this.b = b;
+        this.sorter = new Sorter();
     }
 
     /**
@@ -124,15 +131,6 @@ public class BM {
      * @return Map baru (LinkedHashMap) yang urutannya dari skor terbesar hingga terkecil.
      */
     public Map<Integer, Double> sortDescending(Map<Integer, Double> score) {
-        List<Map.Entry<Integer, Double>> entries = new ArrayList<>(score.entrySet());
-        
-        // Mengurutkan koleksi dengan membandingkan nilai b terhadap a (descending order)
-        entries.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
-
-        Map<Integer, Double> hasil = new LinkedHashMap<>();
-        for (Map.Entry<Integer, Double> e : entries) {
-            hasil.put(e.getKey(), e.getValue());
-        }
-        return hasil;
+        return sorter.sortDescending(score);
     }
 }
