@@ -198,5 +198,6 @@ public class Main {
             double f1 = Evaluation.f1Score(p, r);
             System.out.printf("Precision at 10: %.4f | Recall at 10: %.4f | F1 at 10: %.4f%n", p, r, f1);
         }
+        
     }
 }
