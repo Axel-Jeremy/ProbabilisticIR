@@ -1,116 +1,200 @@
 import index.*;
 import java.io.*;
 import java.util.*;
+import java.nio.charset.StandardCharsets;
+
 import model.*;
 import preprocess.TextPreprocessor;
 import reader.DocumentReader;
+import query.*;
 
 /**
- * Kelas Main untuk menjalankan mesin pencari (Information Retrieval)
- * dengan evaluasi Precision & Recall menggunakan ground truth eksternal (RES).
+ * Kelas Main berfungsi sebagai titik masuk (entry point) utama untuk menjalankan 
+ * sistem mesin pencari (Information Retrieval).
+ * 
+ * Kelas ini menggabungkan seluruh komponen sistem, mulai dari pembacaan dokumen,
+ * pembuatan indeks (Inverted Index), pemrosesan kueri, hingga pemeringkatan menggunakan 
+ * berbagai model probabilistik (BIM, Two Poisson, BM11, BM25) beserta Pseudo Relevance Feedback.
+ * Kelas ini juga melakukan komputasi evaluasi performa seperti Precision, Recall, dan F1-Score 
+ * menggunakan ground truth eksternal (folder RES).
+ * 
+ * Sumber: Membuat sendiri dengan bantuan LLM
+ * 
+ * @author Axel, Alex, Keane
  */
 public class Main {
 
-    private static final String RES_FOLDER   = "../RES";
-    private static final String QUERY_FILE   = "../query.txt";
+    /**
+     * Path (lokasi) folder yang berisi file-file ground truth (relevance judgements)
+     * untuk evaluasi hasil pencarian.
+     */
+    private static final String RES_FOLDER = "../RES";
 
+    /**
+     * Path file yang berisi daftar kueri pengujian beserta ID-nya.
+     */
+    private static final String QUERY_FILE = "../query.txt";
+
+    /**
+     * Metode utama yang akan dijalankan pertama kali saat program dimulai.
+     * * @param args Argumen baris perintah (command line arguments), saat ini tidak digunakan.
+     */
     public static void main(String[] args) {
         String folderPath = "DataSet";
 
         Scanner sc = new Scanner(System.in);
         int totalDocs = numberDocument(sc);
 
+        // Membaca seluruh dokumen dari dataset
         Map<Integer, String> documents = readDocuments(folderPath, totalDocs);
         if (documents == null || documents.isEmpty()) {
             System.out.println("Document is empty / wrong path.");
             return;
         }
 
+        // Membangun Inverted Index berdasarkan dokumen yang telah dibaca
         InvertedIndex invertedIndex = buildInvertedIndex(documents, totalDocs);
 
-        // Load semua query dari query.txt → Map<QueryID, teks query>
+        // Memuat semua kueri dari query.txt ke dalam struktur Map<Teks Query, QueryID>
         Map<String, Integer> queryLookup = loadQueryLookup(QUERY_FILE);
         System.out.println("Query lookup loaded: " + queryLookup.size() + " queries.");
 
+        // Menjalankan sistem interaktif mesin pencari
         run(invertedIndex, sc, queryLookup);
     }
 
     /**
-     * Membaca query.txt dan membangun Map<teks query lowercase, queryID>.
-     * Digunakan untuk exact match saat user mengetik query.
+     * Membaca file kumpulan kueri dan memetakannya ke dalam struktur data Map.
+     * Teks kueri akan dinormalisasi (huruf kecil dan spasi berlebih dihapus) agar
+     * mudah dicocokkan saat pengguna memasukkan input nanti.
+     *
+     * @param queryFilePath Lokasi file text yang berisi daftar kueri.
+     * @return Map yang berisi pasangan kueri yang sudah dinormalisasi (String) 
+     * dan ID kuerinya (Integer).
      */
     private static Map<String, Integer> loadQueryLookup(String queryFilePath) {
         Map<String, Integer> lookup = new LinkedHashMap<>();
-        try (BufferedReader br = new BufferedReader(
-                new java.io.InputStreamReader(
-                    new java.io.FileInputStream(queryFilePath),
-                    java.nio.charset.StandardCharsets.UTF_8))) {
+        try (
+                FileInputStream fileInputStream = new FileInputStream(queryFilePath);
+                InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, StandardCharsets.UTF_8);
+                BufferedReader br = new BufferedReader(inputStreamReader)) {
             String line;
             while ((line = br.readLine()) != null) {
-                line = line.replace("\r", "").trim();
-                line = line.replaceAll("\\s+", " ");
-                if (line.isEmpty()) continue;
-                // Format: "ID\tteks query" atau "ID spasi teks query"
-                int tabIndex = line.indexOf('\t');
-                if (tabIndex < 0) tabIndex = line.indexOf(' ');
-                if (tabIndex < 0) continue;
-                int qid      = Integer.parseInt(line.substring(0, tabIndex).trim());
-                String qtext = line.substring(tabIndex + 1).trim().toLowerCase();
-                qtext = qtext.replaceAll("\\s+", " ");
-                lookup.put(qtext, qid);
+                String cleanedLine = line.replace("\r", "").trim();
+                if (cleanedLine.isEmpty()) {
+                    continue;
+                }
+
+                // Mendeteksi pemisah antara ID dan teks kueri, format: "ID\tteks" atau "ID teks"
+                int separatorIndex = cleanedLine.indexOf('\t');
+                if (separatorIndex < 0) {
+                    separatorIndex = cleanedLine.indexOf(' ');
+                }
+
+                if (separatorIndex < 0) {
+                    continue; // Lewati baris jika tidak ada pemisah yang valid
+                }
+
+                // Mengekstrak ID dan teks kueri mentah
+                String idString = cleanedLine.substring(0, separatorIndex).trim();
+                String rawQueryText = cleanedLine.substring(separatorIndex + 1).trim();
+
+                // Melakukan parsing ID dan menormalisasi teks kueri
+                int qid = Integer.parseInt(idString);
+                String finalQueryText = rawQueryText.toLowerCase().replaceAll("\\s+", " ");
+
+                lookup.put(finalQueryText, qid);
             }
+
+            // Menampilkan contoh (entry pertama) untuk memastikan proses ekstraksi berhasil
             if (!lookup.isEmpty()) {
-                System.out.println("Contoh query: " + lookup.entrySet().iterator().next());
+                Map.Entry<String, Integer> firstEntry = lookup.entrySet().iterator().next();
+                System.out.println("Contoh query: " + firstEntry);
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("[Warning] Gagal membaca query.txt: " + e.getMessage());
+            System.out.println("[Warning] Gagal membaca file query: " + e.getMessage());
         }
+
         return lookup;
     }
 
+    /**
+     * Meminta input dari pengguna untuk menentukan batasan jumlah dokumen 
+     * yang akan diindeks dari dataset.
+     *
+     * @param sc Objek Scanner untuk menerima input dari konsol.
+     * @return Total jumlah dokumen yang akan diproses.
+     */
     private static int numberDocument(Scanner sc) {
         System.out.print("Enter total documents indexed in dataset (max 1400): ");
         int totalDocs = sc.nextInt();
-        sc.nextLine();
+        sc.nextLine(); // Konsumsi karakter newline yang tersisa
         return totalDocs;
     }
 
+    /**
+     * Membaca isi teks dari dokumen-dokumen yang ada di dalam folder dataset.
+     *
+     * @param folderPath Lokasi folder (direktori) tempat dataset dokumen disimpan.
+     * @param totalDocs Jumlah maksimal dokumen yang akan dibaca.
+     * @return Map yang memetakan ID dokumen ke isi konten teksnya.
+     */
     private static Map<Integer, String> readDocuments(String folderPath, int totalDocs) {
         System.out.println("Reading document from " + folderPath + " folder...");
         DocumentReader reader = new DocumentReader(folderPath);
         return reader.readAll(totalDocs);
     }
 
+    /**
+     * Membangun struktur data Inverted Index yang menampung posting list untuk tiap term.
+     * Di dalam proses ini, teks dokumen juga melalui tahap pra-pemrosesan (preprocessing),
+     * penghitungan panjang rata-rata dokumen, dan penetapan skip pointer.
+     *
+     * @param documents Map yang berisi pasangan ID dokumen dan konten teks aslinya.
+     * @param totalDocs Jumlah total dokumen yang ada.
+     * @return Objek InvertedIndex yang sudah terisi penuh dan siap digunakan.
+     */
     private static InvertedIndex buildInvertedIndex(Map<Integer, String> documents, int totalDocs) {
         System.out.println("Building Inverted Index...");
         TextPreprocessor preprocessor = new TextPreprocessor();
         InvertedIndex invertedIndex = new InvertedIndex();
 
         for (int docID = 1; docID <= totalDocs; docID++) {
-            if (!documents.containsKey(docID)) continue;
+            if (!documents.containsKey(docID))
+                continue;
             String content = documents.get(docID);
 
-            // Mengambil dan menyimpan raw terms (tanpa stemming) ke vocabulary
-            // List<String> rawTerms = preprocessor.getRawTerms(content);
-            // for (String raw : rawTerms) {
-            //     invertedIndex.addRawTerm(raw);
-            // }
-
+            // Proses pembersihan dan tokenisasi dokumen
             List<String> terms = preprocessor.process(content);
             invertedIndex.setDocumentLength(docID, terms.size());
-            for (String term : terms) invertedIndex.addDocument(term, docID);
+            
+            // Tambahkan setiap term dokumen ke dalam indeks
+            for (String term : terms)
+                invertedIndex.addDocument(term, docID);
         }
 
+        // Kalkulasi nilai statistik tambahan setelah indeks terbangun
         invertedIndex.computeAverageDocumentLength();
         invertedIndex.assignSkipPointer();
+
         System.out.println("Inverted index has been built successfully.");
         return invertedIndex;
     }
 
+    /**
+     * Loop interaktif utama yang terus menerima kueri pengguna dan memprosesnya
+     * dengan berbagai macam model perankingan, lalu menampilkan hasilnya.
+     *
+     * @param invertedIndex Indeks dokumen yang sudah terbangun.
+     * @param sc Objek Scanner untuk membaca kueri input pengguna.
+     * @param queryLookup Map berisi daftar ground truth kueri untuk proses evaluasi performa.
+     */
     private static void run(InvertedIndex invertedIndex, Scanner sc, Map<String, Integer> queryLookup) {
+        // Inisialisasi model pemeringkatan
         BIM bim = new BIM();
         bim.setInvertedIndex(invertedIndex);
 
+        // Menggunakan kelas dasar BM dengan parameter (k, b) masing-masing untuk BM11 dan BM25
         BM bm11 = new BM(1.5, 1);
         bm11.setInvertedIndex(invertedIndex);
 
@@ -123,35 +207,40 @@ public class Main {
         PseudoRelevanceFeedback prf = new PseudoRelevanceFeedback();
         prf.setInvertedIndex(invertedIndex);
 
-        TextPreprocessor preprocessor = new TextPreprocessor();
-
         System.out.println("---------------------------------------------");
-        System.out.println("         Boolean Tolerant Retrieval          ");
+        System.out.println("           Probabilistic Retrieval           ");
         System.out.println("---------------------------------------------");
 
+        // Loop untuk terus menerima input pencarian hingga pengguna mengetik 'exit'
         while (true) {
             System.out.print("\nEnter query (type 'exit' to cancel): ");
             String input = sc.nextLine().trim();
 
-            if (input.equalsIgnoreCase("exit")) break;
-            if (input.isEmpty()) continue;
+            Query query = new Query(input);
 
-            List<String> queryTerms = preprocessor.process(input);
+            if (input.equalsIgnoreCase("exit"))
+                break;
+            if (input.isEmpty())
+                continue;
 
-            // Jalankan semua model
-            Map<Integer, Double> resultBIM  = prf.PRFWithBIM(queryTerms, 10, bim);
-            Map<Integer, Double> result2PM  = prf.PRFWith2PM(queryTerms, 10, twoPoisson);
+            List<String> queryTerms = query.process();
+
+            // Jalankan seluruh varian pemodelan menggunakan Pseudo Relevance Feedback (Asumsi Top 10 relevan)
+            Map<Integer, Double> resultBIM = prf.PRFWithBIM(queryTerms, 10, bim);
+            Map<Integer, Double> result2PM = prf.PRFWith2PM(queryTerms, 10, twoPoisson);
             Map<Integer, Double> resultBM11 = prf.PRFWithBM(queryTerms, 10, bm11);
             Map<Integer, Double> resultBM25 = prf.PRFWithBM(queryTerms, 10, bm25);
 
-            // Cari Query ID dan ground truth
+            // Lakukan normalisasi input pengguna untuk dicari di lookup table kueri 
+            // agar bisa dievaluasi dengan ground truth
             String normalizedInput = input.replace("\r", "").trim().toLowerCase().replaceAll("\\s+", " ");
             Integer queryID = queryLookup.get(normalizedInput);
+            
             Set<Integer> groundTruth = (queryID != null)
-                ? Evaluation.loadGroundTruth(RES_FOLDER, queryID)
-                : new HashSet<>();
+                    ? Evaluation.loadGroundTruth(RES_FOLDER, queryID)
+                    : new HashSet<>();
 
-            // Tampilkan ranking + evaluasi per model
+            // Tampilkan peringkat dan evaluasi performa (Precision, Recall, F1) untuk masing-masing model
             System.out.println("\n--- BIM ---");
             printResultWithEval(resultBIM, groundTruth);
 
@@ -170,37 +259,35 @@ public class Main {
         }
     }
 
-    private static void printResult(Map<Integer, Double> result) {
-        if (result == null || result.isEmpty()) {
-            System.out.println("--> There is no relevant document.");
-            return;
-        }
-        int rank = 1;
-        for (Map.Entry<Integer, Double> entry : result.entrySet()) {
-            System.out.printf("Rank %d | DocID: %d | Score: %.4f%n",
-                    rank++, entry.getKey(), entry.getValue());
-            if (rank > 10) break;
-        }
-    }
-
+    /**
+     * Menampilkan maksimal 10 hasil dokumen teratas (Top-10 Ranking) ke layar konsol.
+     * Jika ground truth tersedia untuk kueri tersebut, metode ini juga akan mencetak
+     * metrik evaluasi sistem seperti Precision@10, Recall@10, dan F1-Score@10.
+     *
+     * @param result Map berisi ID dokumen dan skor RSV (sudah diurutkan secara menurun).
+     * @param groundTruth Set berisi kumpulan ID dokumen yang benar-benar relevan (dari data uji).
+     */
     private static void printResultWithEval(Map<Integer, Double> result, Set<Integer> groundTruth) {
         if (result == null || result.isEmpty()) {
             System.out.println("--> There is no relevant document.");
             return;
         }
+        
         int rank = 1;
         for (Map.Entry<Integer, Double> entry : result.entrySet()) {
             System.out.printf("Rank %d | DocID: %d | Score: %.4f%n",
                     rank++, entry.getKey(), entry.getValue());
-            if (rank > 10) break;
+            if (rank > 10)
+                break; // Batasi tampilan layar hanya Top 10 dokumen
         }
+        
+        // Eksekusi evaluasi performa jika ground truth memiliki data
         if (!groundTruth.isEmpty()) {
             List<Integer> ranked = Evaluation.toRankedList(result);
-            double p  = Evaluation.precision(ranked, groundTruth, 10);
-            double r  = Evaluation.recall(ranked, groundTruth, 10);
+            double p = Evaluation.precision(ranked, groundTruth, 10);
+            double r = Evaluation.recall(ranked, groundTruth, 10);
             double f1 = Evaluation.f1Score(p, r);
             System.out.printf("Precision at 10: %.4f | Recall at 10: %.4f | F1 at 10: %.4f%n", p, r, f1);
         }
-        
     }
 }
