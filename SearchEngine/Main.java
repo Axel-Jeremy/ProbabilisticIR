@@ -29,12 +29,12 @@ public class Main {
      * Path (lokasi) folder yang berisi file-file ground truth (relevance judgements)
      * untuk evaluasi hasil pencarian.
      */
-    private static final String RES_FOLDER = "../RES";
+    private static final String RES_FOLDER = "RES";
 
     /**
      * Path file yang berisi daftar kueri pengujian beserta ID-nya.
      */
-    private static final String QUERY_FILE = "../query.txt";
+    private static final String QUERY_FILE = "query.txt";
 
     /**
      * Metode utama yang akan dijalankan pertama kali saat program dimulai.
@@ -255,7 +255,7 @@ public class Main {
             printResultWithEval(resultBM25, groundTruth);
 
             if (queryID == null) {
-                System.out.println("\n[Info] Query tidak ditemukan di query.txt — evaluasi dilewati.");
+                System.out.println("\n[Info] Query tidak ditemukan di query.txt. evaluasi dilewati.");
             }
         }
     }
@@ -279,7 +279,7 @@ public class Main {
             System.out.printf("Rank %d | DocID: %d | Score: %.4f%n",
                     rank++, entry.getKey(), entry.getValue());
             if (rank > 10)
-                break; // Batasi tampilan layar hanya Top 10 dokumen
+                break; // limit top 10 dokumen
         }
         
         // Eksekusi evaluasi performa jika ground truth memiliki data
@@ -288,7 +288,11 @@ public class Main {
             double p = Evaluator.precision(ranked, groundTruth, 10);
             double r = Evaluator.recall(ranked, groundTruth, 10);
             double f1 = Evaluator.f1Score(p, r);
+
+            double elevenPtAvg = Evaluator.elevenPointAveragePrecision(ranked, groundTruth);
+
             System.out.printf("Precision at 10: %.4f | Recall at 10: %.4f | F1 at 10: %.4f%n", p, r, f1);
+            System.out.printf("11-Point Average Precision: %.4f%n", elevenPtAvg);
         }
     }
 }
