@@ -20,7 +20,7 @@ import index.*;
  * 
  * Sumber: Membuat sendiri dengan bantuan LLM
  * 
- * @author Keane 
+ * @author Keane, Axel
  */
 public class BM {
     
