@@ -141,8 +141,8 @@ public class Main {
             // Jalankan semua model
             Map<Integer, Double> resultBIM  = prf.PRFWithBIM(queryTerms, 10, bim);
             Map<Integer, Double> result2PM  = prf.PRFWith2PM(queryTerms, 10, twoPoisson);
-            Map<Integer, Double> resultBM11 = prf.PRFWithBM11(queryTerms, 10, bm11);
-            Map<Integer, Double> resultBM25 = prf.PRFWithBM25(queryTerms, 10, bm25);
+            Map<Integer, Double> resultBM11 = prf.PRFWithBM(queryTerms, 10, bm11);
+            Map<Integer, Double> resultBM25 = prf.PRFWithBM(queryTerms, 10, bm25);
 
             // Cari Query ID dan ground truth
             String normalizedInput = input.replace("\r", "").trim().toLowerCase().replaceAll("\\s+", " ");
