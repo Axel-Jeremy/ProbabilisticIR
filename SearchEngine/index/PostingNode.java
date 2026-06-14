@@ -18,7 +18,9 @@ public class PostingNode {
      */
     private int docID;
 
-    //tf
+    /**
+     * frekuensi kemunculan term, nilainya selalu 1 saat node pertama kali dibuat
+     */
     private int termFrequency;
 
     /**

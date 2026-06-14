@@ -15,7 +15,7 @@ public class Main {
     private static final String QUERY_FILE   = "../query.txt";
 
     public static void main(String[] args) {
-        String folderPath = "../DataSet";
+        String folderPath = "DataSet";
 
         Scanner sc = new Scanner(System.in);
         int totalDocs = numberDocument(sc);
@@ -90,8 +90,11 @@ public class Main {
             if (!documents.containsKey(docID)) continue;
             String content = documents.get(docID);
 
-            List<String> rawTerms = preprocessor.getRawTerms(content);
-            for (String raw : rawTerms) invertedIndex.addRawTerm(raw);
+            // Mengambil dan menyimpan raw terms (tanpa stemming) ke vocabulary
+            // List<String> rawTerms = preprocessor.getRawTerms(content);
+            // for (String raw : rawTerms) {
+            //     invertedIndex.addRawTerm(raw);
+            // }
 
             List<String> terms = preprocessor.process(content);
             invertedIndex.setDocumentLength(docID, terms.size());
@@ -108,10 +111,10 @@ public class Main {
         BIM bim = new BIM();
         bim.setInvertedIndex(invertedIndex);
 
-        BM11 bm11 = new BM11(1.5);
+        BM bm11 = new BM(1.5, 1);
         bm11.setInvertedIndex(invertedIndex);
 
-        BM25 bm25 = new BM25(1.5, 0.75);
+        BM bm25 = new BM(1.5, 0.75);
         bm25.setInvertedIndex(invertedIndex);
 
         TwoPoissonModel twoPoisson = new TwoPoissonModel(1.5);

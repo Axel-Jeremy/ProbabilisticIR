@@ -10,7 +10,7 @@ import java.util.List;
  * 
  * Sumber: Membuat sendiri, materi slide Information Retrieval
  * 
- * @author Axel, Alex, Keane
+ * @author Axel, Alex
  */
 public class Stemmer {
     /**
