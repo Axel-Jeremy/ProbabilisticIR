@@ -11,7 +11,7 @@ import java.util.List;
  * 
  * Sumber: Membuat sendiri
  * 
- * @author Axel, Keane, Alex
+ * @author Axel
  */
 public class TextPreprocessor {
 
