@@ -7,6 +7,7 @@ import model.*;
 import preprocess.TextPreprocessor;
 import reader.DocumentReader;
 import query.*;
+import evaluator.Evaluator;
 
 /**
  * Kelas Main berfungsi sebagai titik masuk (entry point) utama untuk menjalankan 
@@ -237,7 +238,7 @@ public class Main {
             Integer queryID = queryLookup.get(normalizedInput);
             
             Set<Integer> groundTruth = (queryID != null)
-                    ? Evaluation.loadGroundTruth(RES_FOLDER, queryID)
+                    ? Evaluator.loadGroundTruth(RES_FOLDER, queryID)
                     : new HashSet<>();
 
             // Tampilkan peringkat dan evaluasi performa (Precision, Recall, F1) untuk masing-masing model
@@ -283,10 +284,10 @@ public class Main {
         
         // Eksekusi evaluasi performa jika ground truth memiliki data
         if (!groundTruth.isEmpty()) {
-            List<Integer> ranked = Evaluation.toRankedList(result);
-            double p = Evaluation.precision(ranked, groundTruth, 10);
-            double r = Evaluation.recall(ranked, groundTruth, 10);
-            double f1 = Evaluation.f1Score(p, r);
+            List<Integer> ranked = Evaluator.toRankedList(result);
+            double p = Evaluator.precision(ranked, groundTruth, 10);
+            double r = Evaluator.recall(ranked, groundTruth, 10);
+            double f1 = Evaluator.f1Score(p, r);
             System.out.printf("Precision at 10: %.4f | Recall at 10: %.4f | F1 at 10: %.4f%n", p, r, f1);
         }
     }
