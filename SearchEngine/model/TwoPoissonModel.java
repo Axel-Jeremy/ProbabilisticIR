@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import index.*;
+import sorter.Sorter;
 
 /**
  * Kelas TwoPoissonModel merepresentasikan implementasi dari algoritma pemeringkatan 
@@ -41,6 +42,11 @@ public class TwoPoissonModel {
     private InvertedIndex invertedIndex;
 
     /**
+     * Referensi ke Sorter untuk melakukan pengurutan skor
+     */
+    private Sorter sorter;
+
+    /**
      * Konstruktor untuk menginisialisasi model pemeringkatan Two Poisson.
      *
      * @param k Nilai parameter k untuk mengatur besar pengaruh Term Frequency.
@@ -48,6 +54,7 @@ public class TwoPoissonModel {
     public TwoPoissonModel(double k){
         this.bim = new BIM();
         this.k = k;
+        this.sorter = new Sorter();
     }
 
     /**
@@ -109,15 +116,6 @@ public class TwoPoissonModel {
      * @return Map baru (LinkedHashMap) yang urutannya dari skor terbesar hingga terkecil.
      */
     public Map<Integer, Double> sortDescending(Map<Integer, Double> score) {
-        List<Map.Entry<Integer, Double>> entries = new ArrayList<>(score.entrySet());
-        
-        // Membandingkan value secara descending
-        entries.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
-
-        Map<Integer, Double> hasil = new LinkedHashMap<>();
-        for (Map.Entry<Integer, Double> e : entries) {
-            hasil.put(e.getKey(), e.getValue());
-        }
-        return hasil;
+        return sorter.sortDescending(score);
     }
 }
