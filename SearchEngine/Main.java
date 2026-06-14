@@ -14,7 +14,7 @@ import reader.DocumentReader;
  */
 public class Main {
     public static void main(String[] args) {
-        String folderPath = "../DataSet";
+        String folderPath = "DataSet";
 
         Scanner sc = new Scanner(System.in);
         int totalDocs = numberDocument(sc);
@@ -94,10 +94,10 @@ public class Main {
             String content = documents.get(docID);
 
             // Mengambil dan menyimpan raw terms (tanpa stemming) ke vocabulary
-            List<String> rawTerms = preprocessor.getRawTerms(content);
-            for (String raw : rawTerms) {
-                invertedIndex.addRawTerm(raw);
-            }
+            // List<String> rawTerms = preprocessor.getRawTerms(content);
+            // for (String raw : rawTerms) {
+            //     invertedIndex.addRawTerm(raw);
+            // }
 
             // Memproses teks secara penuh (termasuk stemming) untuk dipindahkan ke posting
             // list
@@ -138,10 +138,10 @@ public class Main {
         BIM bim = new BIM();
         bim.setInvertedIndex(invertedIndex);
 
-        BM11 bm11 = new BM11(1.5);
+        BM bm11 = new BM(1.5, 1);
         bm11.setInvertedIndex(invertedIndex);
 
-        BM25 bm25 = new BM25(1.5, 0.75);
+        BM bm25 = new BM(1.5, 0.75);
         bm25.setInvertedIndex(invertedIndex);
 
         TwoPoissonModel twoPoisson = new TwoPoissonModel(1.5);
@@ -183,10 +183,10 @@ public class Main {
             printResult(prf.PRFWith2PM(queryTerms, 10, twoPoisson));
 
             System.out.println("\n--- BM11 ---");
-            printResult(prf.PRFWithBM11(queryTerms, 10, bm11));
+            printResult(prf.PRFWithBM(queryTerms, 10, bm11));
 
             System.out.println("\n--- BM25 ---");
-            printResult(prf.PRFWithBM25(queryTerms, 10, bm25));
+            printResult(prf.PRFWithBM(queryTerms, 10, bm25));
         }
     }
 
