@@ -117,6 +117,62 @@ public class Evaluator {
     }
 
     /**
+     * Menghitung 11-point Interpolated Average Precision berdasarkan 
+     * slide materi Information Retrieval: Evaluation.
+     * @param retrieved List berisi DocID dokumen yang dikembalikan oleh model (terurut dari skor tertinggi).
+     * @param relevant Set berisi DocID dokumen yang relevan (ground truth).
+     * @return Nilai 11-point Average Precision (dalam desimal 0.0 - 1.0).
+     */
+    public static double elevenPointAveragePrecision(List<Integer> retrieved, Set<Integer> relevant) {
+        // Jika tidak ada dokumen yang relevan sama sekali di ground truth, maka skornya 0
+        if (relevant.isEmpty()) {
+            return 0.0;
+        }
+
+        int totalRelevant = relevant.size();
+        List<Double> recalls = new ArrayList<>();
+        List<Double> precisions = new ArrayList<>();
+        
+        int tp = 0; // True Positives
+
+        // Hitung precision dan recall pada setiap level K dokumen yang ditarik
+        for (int i = 0; i < retrieved.size(); i++) {
+            if (relevant.contains(retrieved.get(i))) {
+                tp++;
+            }
+            double precisionAtK = (double) tp / (i + 1);
+            double recallAtK = (double) tp / totalRelevant;
+            
+            precisions.add(precisionAtK);
+            recalls.add(recallAtK);
+        }
+
+        // 11 titik standard recall (0.0 - 1.0)
+        double[] elevenPoints = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+        double sumInterpolatedPrecision = 0.0;
+
+        // 3. Hitung interpolated precision untuk setiap level recall r_j
+        for (double r_j : elevenPoints) {
+            double maxPrecision = 0.0;
+            
+            // Gunakan formula interpolasi: P(r_j) = max(P(r')) untuk r' >= r_j
+            for (int i = 0; i < recalls.size(); i++) {
+                if (recalls.get(i) >= r_j) {
+                    if (precisions.get(i) > maxPrecision) {
+                        maxPrecision = precisions.get(i);
+                    }
+                }
+            }
+            
+            // Tambahkan nilai maksimum (interpolated) yang didapat untuk titik r_j ini
+            sumInterpolatedPrecision += maxPrecision;
+        }
+
+        // 4. Rata-ratakan keseluruhan dari 11 titik (P_11-pt)
+        return sumInterpolatedPrecision / 11.0;
+    }
+
+    /**
      * Fungsi untuk mengubah struktur data Map (yang memetakan DocID ke Skor RSV) 
      * menjadi sebuah List yang hanya berisi DocID. 
      * 
