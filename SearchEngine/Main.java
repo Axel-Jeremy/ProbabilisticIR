@@ -226,11 +226,12 @@ public class Main {
 
             List<String> queryTerms = query.process();
 
+            int topK = 10;
             // Jalankan seluruh varian pemodelan menggunakan Pseudo Relevance Feedback (Asumsi Top 10 relevan)
-            Map<Integer, Double> resultBIM = prf.PRFWithBIM(queryTerms, 10, bim);
-            Map<Integer, Double> result2PM = prf.PRFWith2PM(queryTerms, 10, twoPoisson);
-            Map<Integer, Double> resultBM11 = prf.PRFWithBM(queryTerms, 10, bm11);
-            Map<Integer, Double> resultBM25 = prf.PRFWithBM(queryTerms, 10, bm25);
+            Map<Integer, Double> resultBIM = prf.PRF(queryTerms, topK, bim);
+            Map<Integer, Double> result2PM = prf.PRF(queryTerms, topK, twoPoisson);
+            Map<Integer, Double> resultBM11 = prf.PRF(queryTerms, topK, bm11);
+            Map<Integer, Double> resultBM25 = prf.PRF(queryTerms, topK, bm25);
 
             // Lakukan normalisasi input pengguna untuk dicari di lookup table kueri 
             // agar bisa dievaluasi dengan ground truth
