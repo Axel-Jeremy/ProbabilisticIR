@@ -47,14 +47,9 @@ public class InvertedIndex {
     private long totalTermsInCollection;
 
     /**
-     * Set yang menyimpan kosa kata asli (raw vocabulary) sebelum diproses.
-     */
-    // private Set<String> rawVocabulary = new HashSet<>();
-
-    /**
      * Menyimpan ID dokumen tertinggi yang pernah dimasukkan ke dalam indeks.
      */
-    private int maxDocID;
+    // private int maxDocID;
 
     /**
      * Konstruktor bawaan (default) untuk menginisialisasi InvertedIndex.
@@ -63,7 +58,7 @@ public class InvertedIndex {
         this.postingList = new HashMap<>();
         this.postingLength = new HashMap<>();
         this.documentLengths = new HashMap<>();
-        this.maxDocID = 0;
+        // this.maxDocID = 0;
         this.totalTermsInCollection = 0;
         this.avgDocLength = 0.0;
     }
@@ -77,14 +72,6 @@ public class InvertedIndex {
      */
     public List<PostingNode> getPostingList(String term) {
         return postingList.getOrDefault(term, new ArrayList<>());
-    }
-
-    /**
-     * Mengambil ID dokumen terbesar (maksimal) yang tersimpan di dalam indeks.
-     * * @return Nilai integer dari ID dokumen terbesar.
-     */
-    public int getMaxDocID() {
-        return maxDocID;
     }
 
     /**
@@ -206,8 +193,6 @@ public class InvertedIndex {
                 postingLength.replace(term, postingLength.get(term) + 1);
             }
         }
-        // Perbarui nilai maxDocID jika docID baru lebih besar
-        maxDocID = Math.max(maxDocID, docID);
     }
 
     /**
