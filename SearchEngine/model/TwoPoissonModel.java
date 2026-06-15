@@ -24,7 +24,7 @@ import sorter.Sorter;
 public class TwoPoissonModel {
     
     /**
-     * Referensi ke model BIM (Binary Independence Model) untuk mendapatkan bobot term dasar ($w_t$).
+     * Referensi ke model BIM (Binary Independence Model) untuk mendapatkan bobot term dasar
      */
     private BIM bim;
     

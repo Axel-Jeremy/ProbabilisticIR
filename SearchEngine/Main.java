@@ -176,7 +176,7 @@ public class Main {
 
         // Kalkulasi nilai statistik tambahan setelah indeks terbangun
         invertedIndex.computeAverageDocumentLength();
-        invertedIndex.assignSkipPointer();
+        // invertedIndex.assignSkipPointer();
 
         System.out.println("Inverted index has been built successfully.");
         return invertedIndex;

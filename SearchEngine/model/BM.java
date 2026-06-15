@@ -57,8 +57,8 @@ public class BM {
     /**
      * Konstruktor untuk menginisialisasi model pemeringkatan BM.
      *
-     * @param k Nilai parameter $k$ untuk mengatur saturasi Term Frequency.
-     * @param b Nilai parameter $b$ untuk mengatur normalisasi panjang dokumen.
+     * @param k Nilai parameter k untuk mengatur saturasi Term Frequency.
+     * @param b Nilai parameter b untuk mengatur normalisasi panjang dokumen.
      */
     public BM(double k, double b){
         this.bim = new BIM();
