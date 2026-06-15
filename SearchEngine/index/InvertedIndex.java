@@ -12,10 +12,7 @@ import java.util.Set;
  * digunakan dalam sistem Information Retrieval untuk memetakan sebuah kata 
  * (term) ke daftar dokumen (posting list) yang mengandung kata tersebut.
  * 
- * Kelas ini juga mendukung penambahan skip pointer untuk mempercepat proses pencarian,
- * serta menyimpan metrik tambahan untuk perhitungan skor seperti TF-IDF atau BM25.
- * 
- * Sumber: Dibuat sendiri dengan bantuan LLM
+ * Sumber: Dibuat sendiri, materi slide kuliah Information Retrieval
  * 
  * @author Axel, Keane, Alex
  */
@@ -214,36 +211,6 @@ public class InvertedIndex {
     }
 
     /**
-     * Menetapkan skip pointer pada setiap node di semua posting list.
-     * Skip pointer berguna untuk mengoptimalkan proses irisan (intersection) 
-     * saat memproses kueri pencarian. Jarak lompatan dihitung menggunakan akar kuadrat 
-     * dari panjang posting list.
-     */
-    public void assignSkipPointer() {
-        for (String term : postingList.keySet()) {
-            // Hitung panjang posting list untuk term saat ini
-            int length = postingList.get(term).size();
-
-            if (length < 3)
-                continue; //terlalu pendek
-
-            // Rumus standar skip interval
-            int skipInterval = (int) Math.sqrt(length);
-
-            PostingNode[] nodes = new PostingNode[length];
-            PostingNode current = postingList.get(term).getFirst();
-            for (int i = 0; i < length; i++) {
-                nodes[i] = current;
-                current = current.getNext();
-            }
-
-            for (int i = 0; i + skipInterval < length; i += skipInterval) {
-                nodes[i].setSkip(nodes[i + skipInterval]);
-            }
-        }
-    }
-
-    /**
      * Menampilkan daftar dokumen di posting list beserta nilai term frequency (TF)
      *
      * @param term Kata yang ingin dilihat detail posting list-nya.
@@ -265,21 +232,3 @@ public class InvertedIndex {
         }
     }
 }
-
-
-    // /**
-    //  * Menambahkan kata mentah (raw term) ke dalam kumpulan kosa kata.
-    //  * Kata akan diubah menjadi huruf kecil (case folding) terlebih dahulu.
-    //  * * @param rawTerm Kata mentah yang akan ditambahkan.
-    //  */
-    // public void addRawTerm(String rawTerm) {
-    //     rawVocabulary.add(rawTerm.toLowerCase()); // case folding sebelum memasukkan raw term
-    // }
-
-    // /**
-    //  * Mengambil seluruh himpunan kosa kata mentah (raw vocabulary).
-    //  * * @return Set yang berisi raw terms.
-    //  */
-    // public Set<String> getRawVocabulary() {
-    //     return rawVocabulary;
-    // }

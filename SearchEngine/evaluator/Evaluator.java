@@ -11,9 +11,9 @@ import java.util.*;
  * dengan data kebenaran aktual (ground truth / relevance judgements) untuk mengukur 
  * tingkat akurasi dan efektivitas model pencarian.
  * 
- * Sumber: Membuat sendiri dengan bantuan LLM
+ * Sumber: Membuat sendiri, materi slide Information Retrieval, dengan bantuan LLM
  * 
- * @author Alex
+ * @author Alex, Axel
  */
 public class Evaluator {
 
@@ -118,7 +118,6 @@ public class Evaluator {
 
     /**
      * Menghitung 11-point Interpolated Average Precision berdasarkan 
-     * slide materi Information Retrieval: Evaluation.
      * @param retrieved List berisi DocID dokumen yang dikembalikan oleh model (terurut dari skor tertinggi).
      * @param relevant Set berisi DocID dokumen yang relevan (ground truth).
      * @return Nilai 11-point Average Precision (dalam desimal 0.0 - 1.0).
@@ -151,24 +150,23 @@ public class Evaluator {
         double[] elevenPoints = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
         double sumInterpolatedPrecision = 0.0;
 
-        // 3. Hitung interpolated precision untuk setiap level recall r_j
-        for (double r_j : elevenPoints) {
+        // interpolated precision untuk setiap level recall rj
+        for (double rj : elevenPoints) {
             double maxPrecision = 0.0;
             
-            // Gunakan formula interpolasi: P(r_j) = max(P(r')) untuk r' >= r_j
+            // cari max precision
             for (int i = 0; i < recalls.size(); i++) {
-                if (recalls.get(i) >= r_j) {
+                if (recalls.get(i) >= rj) {
                     if (precisions.get(i) > maxPrecision) {
                         maxPrecision = precisions.get(i);
                     }
                 }
             }
             
-            // Tambahkan nilai maksimum (interpolated) yang didapat untuk titik r_j ini
             sumInterpolatedPrecision += maxPrecision;
         }
 
-        // 4. Rata-ratakan keseluruhan dari 11 titik (P_11-pt)
+        // average keseluruhan dari 11 titik
         return sumInterpolatedPrecision / 11.0;
     }
 
