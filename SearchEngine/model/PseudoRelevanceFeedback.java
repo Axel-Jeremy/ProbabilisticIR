@@ -59,7 +59,7 @@ public class PseudoRelevanceFeedback {
      * @return Map berisi ID dokumen dan skor akhirnya (RSV), yang sudah dihitung ulang 
      * berdasarkan informasi umpan balik, diurutkan secara menurun.
      */
-    public Map<Integer, Double> PRFWithBIM(List<String> queryTerms, int topK, BIM bim) {
+    public Map<Integer, Double> PRF(List<String> queryTerms, int topK, BIM bim) {
         // Pencarian awal tanpa asumsikan ada dokumen yang relevan (R = 0)
         Map<Integer, Double> initialRanking = bim.hitungRSV(queryTerms, 0, new HashMap<>());
 
@@ -97,7 +97,7 @@ public class PseudoRelevanceFeedback {
      * @return Map berisi ID dokumen dan skor akhirnya (RSV), yang sudah dihitung ulang 
      * berdasarkan informasi umpan balik, diurutkan secara menurun.
      */
-    public Map<Integer, Double> PRFWithBM(List<String> queryTerms, int topK, BM bm) {
+    public Map<Integer, Double> PRF(List<String> queryTerms, int topK, BM bm) {
          // Pencarian awal tanpa asumsikan ada dokumen yang relevan (R = 0)
         Map<Integer, Double> initialRanking = bm.calculateRSV(queryTerms, 0, new HashMap<>());
 
@@ -132,7 +132,7 @@ public class PseudoRelevanceFeedback {
      * @return Map berisi ID dokumen dan skor akhirnya (RSV), yang sudah dihitung ulang 
      * berdasarkan informasi umpan balik, diurutkan secara menurun.
      */
-    public Map<Integer, Double> PRFWith2PM(List<String> queryTerms, int topK, TwoPoissonModel tpm) {
+    public Map<Integer, Double> PRF(List<String> queryTerms, int topK, TwoPoissonModel tpm) {
         Map<Integer, Double> initialRanking = tpm.calculateRSV(queryTerms, 0, new HashMap<>());
 
         Set<Integer> topKDocuments = initialRanking.keySet().stream()

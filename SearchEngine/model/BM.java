@@ -67,6 +67,8 @@ public class BM {
         this.sorter = new Sorter();
     }
 
+    
+
     /**
      * Menetapkan Inverted Index yang akan digunakan sebagai basis pencarian.
      *
