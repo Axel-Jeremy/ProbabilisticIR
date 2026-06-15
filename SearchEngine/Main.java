@@ -37,11 +37,15 @@ public class Main {
     private static final String QUERY_FILE = "query.txt";
 
     /**
+     * Path file yang berisi dataset Cranfield.
+     */
+    private static final String folderPath = "DataSet";
+
+    /**
      * Metode utama yang akan dijalankan pertama kali saat program dimulai.
      * * @param args Argumen baris perintah (command line arguments), saat ini tidak digunakan.
      */
     public static void main(String[] args) {
-        String folderPath = "DataSet";
 
         Scanner sc = new Scanner(System.in);
         int totalDocs = numberDocument(sc);
