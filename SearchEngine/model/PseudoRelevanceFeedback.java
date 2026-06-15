@@ -63,7 +63,7 @@ public class PseudoRelevanceFeedback {
         // Pencarian awal tanpa asumsikan ada dokumen yang relevan (R = 0)
         Map<Integer, Double> initialRanking = bim.hitungRSV(queryTerms, 0, new HashMap<>());
 
-        // Ambil ID dari K-dokumen teratas yang diasumsikan relevan
+        // Ambil Top-K dokumen
         Set<Integer> topKDocuments = initialRanking.keySet().stream()
                 .limit(topK)
                 .collect(Collectors.toSet());
@@ -98,7 +98,7 @@ public class PseudoRelevanceFeedback {
      * berdasarkan informasi umpan balik, diurutkan secara menurun.
      */
     public Map<Integer, Double> PRF(List<String> queryTerms, int topK, BM bm) {
-         // Pencarian awal tanpa asumsikan ada dokumen yang relevan (R = 0)
+        // Pencarian awal tanpa asumsikan ada dokumen yang relevan (R = 0)
         Map<Integer, Double> initialRanking = bm.calculateRSV(queryTerms, 0, new HashMap<>());
 
         // Ambil Top-K dokumen
@@ -106,17 +106,19 @@ public class PseudoRelevanceFeedback {
                 .limit(topK)
                 .collect(Collectors.toSet());
 
-        int R = topKDocuments.size();
-        Map<String, Integer> rtMap = new HashMap<>();
+        int R = topKDocuments.size(); // Total dokumen relevan (diasumsikan = K)
+        Map<String, Integer> rtMap = new HashMap<>(); // Menyimpan jumlah dokumen relevan yang mengandung term tertentu
         for (String term : queryTerms) {
             int rt = 0;
             for (PostingNode node : invertedIndex.getPostingList(term)) {
                 int docID = node.getDocID();
+                // kalo dokumen yang mengandung term ada di dalam set Top-K, tambah nilai rt
                 if (topKDocuments.contains(docID)) rt++;
             }
             rtMap.put(term, rt);
         }
 
+        // pencarian final menggunakan parameter PRF (R dan rt) yang telah diperbarui
         Map<Integer, Double> finalRanking = bm.calculateRSV(queryTerms, R, rtMap);
 
         return finalRanking;
@@ -133,23 +135,27 @@ public class PseudoRelevanceFeedback {
      * berdasarkan informasi umpan balik, diurutkan secara menurun.
      */
     public Map<Integer, Double> PRF(List<String> queryTerms, int topK, TwoPoissonModel tpm) {
+         // Pencarian awal tanpa asumsikan ada dokumen yang relevan (R = 0)
         Map<Integer, Double> initialRanking = tpm.calculateRSV(queryTerms, 0, new HashMap<>());
 
+        // Ambil Top-K dokumen
         Set<Integer> topKDocuments = initialRanking.keySet().stream()
                 .limit(topK)
                 .collect(Collectors.toSet());
 
-        int R = topKDocuments.size();
-        Map<String, Integer> rtMap = new HashMap<>();
+        int R = topKDocuments.size(); // Total dokumen relevan (diasumsikan = K)
+        Map<String, Integer> rtMap = new HashMap<>(); // Menyimpan jumlah dokumen relevan yang mengandung term tertentu
         for (String term : queryTerms) {
             int rt = 0;
             for (PostingNode node : invertedIndex.getPostingList(term)) {
                 int docID = node.getDocID();
+                // kalo dokumen yang mengandung term ada di dalam set Top-K, tambah nilai rt
                 if (topKDocuments.contains(docID)) rt++;
             }
             rtMap.put(term, rt);
         }
 
+        // pencarian final menggunakan parameter PRF (R dan rt) yang telah diperbarui
         Map<Integer, Double> finalRanking = tpm.calculateRSV(queryTerms, R, rtMap);
 
         return finalRanking;
