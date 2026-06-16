@@ -48,32 +48,7 @@ public class TextPreprocessor {
         result = stem(result);
         return result;
     }
-
-    /**
-     * Mengambil daftar kata mentah (raw terms) langsung dari teks tanpa melalui 
-     * proses stemming. Proses ini membersihkan karakter non-alfabet dan 
-     * mengubah huruf menjadi kecil (lowercase).
-     * 
-     * @param text Teks mentah yang ingin diambil kata-katanya.
-     * @return List berisi kata-kata asli tanpa tanda baca dan dalam bentuk huruf kecil.
-     */
-    public List<String> getRawTerms(String text) {
-        List<String> res = new ArrayList<>();
-
-        // Mengubah ke huruf kecil, membersihkan karakter non-huruf,
-        // dan memisahkannya berdasarkan spasi (whitespace)
-        String[] raw = text
-        .toLowerCase()
-        .replaceAll("[^a-z ]", " ")
-        .split("\\s+");
-
-        for (String rawText : raw) {
-            res.add(rawText);
-        }
-
-        return res;
-    }
-
+    
     /**
      * Melakukan proses Porter Stemming pada kumpulan daftar term.
      * 
