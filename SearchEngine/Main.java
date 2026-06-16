@@ -35,17 +35,17 @@ public class Main {
      * judgements)
      * untuk evaluasi hasil pencarian.
      */
-    private static final String RES_FOLDER = "RES";
+    private static final String RES_FOLDER = "../RES";
 
     /**
      * Path file yang berisi daftar kueri pengujian beserta ID-nya.
      */
-    private static final String QUERY_FILE = "query.txt";
+    private static final String QUERY_FILE = "../query.txt";
 
     /**
      * Path file yang berisi dataset Cranfield.
      */
-    private static final String folderPath = "DataSet";
+    private static final String folderPath = "../DataSet";
 
     /**
      * Metode utama yang akan dijalankan pertama kali saat program dimulai.
